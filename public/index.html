@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>現映 GENEI | OTAKU CREATIVE BASE</title>
+    <title>現映 GENEI STUDIO</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -344,6 +344,37 @@
         }
         .ai-float-btn:hover { transform: scale(1.1); }
 
+        /* Admin Add Button */
+        #admin-fab {
+            position: fixed;
+            bottom: 160px; /* Above AI button */
+            right: 80px;
+            z-index: 9001;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+        }
+        
+        .admin-add-btn {
+            background: #d60080; /* Pink */
+            color: white;
+            border: 2px solid #1a1a1a;
+            width: 50px; height: 50px;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 3px 3px 0 #1a1a1a;
+            transition: all 0.3s;
+            clip-path: polygon(20% 0, 100% 0, 100% 80%, 80% 100%, 0 100%, 0 20%);
+        }
+        .admin-add-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: #1a1a1a;
+            color: #d60080;
+        }
+
         .chat-log {
             flex: 1; overflow-y: auto; background: #f5f5f5; padding: 10px;
             font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px;
@@ -618,13 +649,13 @@
                                 <select id="work-color" class="w-full bg-gray-50 border border-gray-300 p-2">
                                     <option value="shadow-yellow">Yellow</option><option value="shadow-pink">Pink</option><option value="shadow-cyan">Cyan</option><option value="shadow-lime">Lime</option>
                                 </select>
-                            </div>
+                             </div>
                         </div>
 
                         <div class="mt-6 flex justify-end">
                              <button onclick="submitPost()" class="bg-neon-lime text-white border-2 border-black font-impact px-6 py-2 skew-x-[-10deg] hover:bg-black transition-colors shadow-[3px_3px_0_#000]">
                                 SAVE TO DATABASE
-                            </button>
+                             </button>
                         </div>
                     </div>
                 </div>
@@ -683,6 +714,14 @@
     <div id="ai-btn-container">
         <button onclick="openAiModal()" class="ai-float-btn pointer-events-auto">
             <img src="botaicon.png" alt="AI" class="w-full h-full object-cover p-1" onerror="this.style.display='none'; this.parentNode.innerText='🤖'">
+        </button>
+    </div>
+    
+    <!-- ★ ADMIN ADD BUTTON (Initially Hidden) ★ -->
+    <div id="admin-fab">
+        <div class="text-xs font-bold bg-white border border-black px-2 py-1 mb-1 shadow-[2px_2px_0_rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">NEW POST</div>
+        <button onclick="openPostModal()" class="admin-add-btn pointer-events-auto group">
+            +
         </button>
     </div>
 
@@ -761,13 +800,13 @@
         
                     <div class="w-full relative z-20 flex justify-center">
             
-                       <div class="mb-4 relative w-full max-w-6xl mx-auto">
+                        <div class="mb-4 relative w-full max-w-6xl mx-auto">
                            <img src="hero.png" 
                                 alt="GENEI MAIN" 
                                 class="w-full h-auto object-cover rounded-lg shadow-2xl" 
                                 onerror="this.src='https://placehold.co/1200x675/fff/000?text=MAIN+VISUAL';">
                 
-                       </div>
+                        </div>
                     </div>
              </div>
          </section>
@@ -900,10 +939,6 @@
             },
 
 requestAdminAccess: () => {
-
-    },
-verify: async () => {
-
   if (!AuthService.checkRateLimit()) {
     window.showAlert("SECURITY ALERT: Too many attempts. System locked for 60s.");
     return;
@@ -912,37 +947,18 @@ verify: async () => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   AuthService.otp = otp;
 
-const openAuthModal = () => {
-  const modal = document.getElementById('auth-modal');
-  if (!modal) return;
-
-  modal.style.display = 'flex';
-
-  // ★保険：GSAPが死んでも見えるようにする
-  const content = modal.querySelector('.modal-content');
-  if (content) {
-    content.style.opacity = '1';
-    content.style.transform = 'scale(1)';
-  }
-
-  // ★GSAPがある時だけアニメ（無い/壊れてても落ちない）
-  if (window.gsap) {
+  const openAuthModal = () => {
+    const modal = document.getElementById('auth-modal');
+    modal.style.display = 'flex';
     gsap.fromTo(
       "#auth-modal .modal-content",
       { scale: 0.9, opacity: 0 },
       { scale: 1, opacity: 1, duration: 0.2, ease: "power2.out" }
     );
-  }
-
-  const input = document.getElementById('otp-input');
-  if (input) {
+    const input = document.getElementById('otp-input');
     input.value = '';
     input.focus();
-  }
-};
-
-
-  window.AuthService = AuthService;
+  };
 
   // EmailJSが使えるなら送信を試す（失敗してもモーダルは開く）
   if (window.emailjs && EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
@@ -963,6 +979,52 @@ const openAuthModal = () => {
   }
 },
 
+
+            verify: async () => {
+                const input = document.getElementById('otp-input').value;
+                AuthService.recordAttempt();
+
+                if (input === AuthService.otp) {
+                    AuthService.token = "TOKEN_" + Date.now();
+                    // ★ 制限時間を実質無効化（24時間）
+                    AuthService.expiry = Date.now() + (24 * 60 * 60 * 1000); 
+                    
+                    if (db && window.firebaseModules) {
+                        try {
+                            const { collection, addDoc, serverTimestamp } = window.firebaseModules;
+                            if (auth && auth.currentUser) {
+                                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'system_logs'), {
+                                    type: 'AUTH_SUCCESS',
+                                    timestamp: serverTimestamp(),
+                                    userAgent: navigator.userAgent
+                                });
+                            }
+                        } catch(e) {}
+                    }
+
+                    document.getElementById('auth-modal').style.display = 'none';
+                    window.enableAdminMode();
+                    
+                    // ★ 制限時間の記述を削除
+                    window.showAlert("ACCESS GRANTED.");
+                    
+                    /* ★ 自動リロード処理を削除
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 60000);
+                    */
+
+                } else {
+                    window.showAlert("INVALID PASSCODE");
+                }
+            },
+
+            isAuthenticated: () => {
+                if (!AuthService.token || Date.now() > AuthService.expiry) {
+                    return false;
+                }
+                return true;
+            }
         };
 
         window.AuthService = AuthService;
@@ -976,6 +1038,9 @@ const openAuthModal = () => {
             if(activeTab === 'logs') renderLogs();
             else if(activeTab === 'works') renderWorks();
             
+            // ★ ADDED: Show Admin FAB button
+            document.getElementById('admin-fab').style.display = 'flex';
+
             setTimeout(() => {
                 closeAiModal();
                 openPostModal();
