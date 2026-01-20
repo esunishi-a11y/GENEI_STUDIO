@@ -912,22 +912,35 @@ verify: async () => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   AuthService.otp = otp;
 
-  const openAuthModal = () => {
-    const modal = document.getElementById('auth-modal');
-    modal.style.display = 'flex';
+const openAuthModal = () => {
+  const modal = document.getElementById('auth-modal');
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+
+  // ★保険：GSAPが死んでも見えるようにする
+  const content = modal.querySelector('.modal-content');
+  if (content) {
+    content.style.opacity = '1';
+    content.style.transform = 'scale(1)';
+  }
+
+  // ★GSAPがある時だけアニメ（無い/壊れてても落ちない）
+  if (window.gsap) {
     gsap.fromTo(
       "#auth-modal .modal-content",
       { scale: 0.9, opacity: 0 },
       { scale: 1, opacity: 1, duration: 0.2, ease: "power2.out" }
     );
-    const input = document.getElementById('otp-input').value.trim();
+  }
+
+  const input = document.getElementById('otp-input');
+  if (input) {
     input.value = '';
     input.focus();
+  }
+};
 
-    isAuthenticated: () => {
-        return !!AuthService.token && Date.now() <= AuthService.expiry;
-    }
-  };
 
   window.AuthService = AuthService;
 
