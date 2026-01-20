@@ -767,7 +767,7 @@
                                 class="w-full h-auto object-cover rounded-lg shadow-2xl" 
                                 onerror="this.src='https://placehold.co/1200x675/fff/000?text=MAIN+VISUAL';">
                 
-                        </div>
+                       </div>
                     </div>
              </div>
          </section>
@@ -1254,10 +1254,29 @@ requestAdminAccess: () => {
         const playUnlockSound = () => { if (audioCtx.state !== 'suspended') { const t=audioCtx.currentTime; [523,659,784,1046].forEach((f,i)=>{ const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=f; g.gain.setValueAtTime(0.1,t+i*0.1); g.gain.exponentialRampToValueAtTime(0.001,t+i*0.1+0.5); o.connect(g); g.connect(audioCtx.destination); o.start(t+i*0.1); o.stop(t+i*0.1+0.5); });}};
         const playBGM = () => { bgmAudio.play().catch(e=>console.log(e)); };
         const stopBGM = () => { bgmAudio.pause(); };
+        
+        // ★ FIX: 名前付き関数に変更して、イベントリスナーの重複登録を防ぐ
+        const playHoverSound = () => {
+             if(audioCtx.state!=='suspended' && !isMuted) { 
+                 const t=audioCtx.currentTime; 
+                 const o=audioCtx.createOscillator(); 
+                 const g=audioCtx.createGain(); 
+                 o.type='sine'; 
+                 o.frequency.setValueAtTime(1200,t); 
+                 g.gain.setValueAtTime(0.05,t); 
+                 g.gain.exponentialRampToValueAtTime(0.001,t+0.05); 
+                 o.connect(g); 
+                 g.connect(audioCtx.destination); 
+                 o.start(); 
+                 o.stop(t+0.05); 
+             }
+        };
+
         const addHoverSounds = () => {
              document.querySelectorAll('a, button, .menu-link, .otaku-border, .scroll-trigger-item').forEach(el => {
-                el.removeEventListener('mouseenter', playClickSound); 
-                el.addEventListener('mouseenter', () => { if(audioCtx.state!=='suspended' && !isMuted) { const t=audioCtx.currentTime; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(1200,t); g.gain.setValueAtTime(0.05,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.05); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(t+0.05); }});
+                // 正しくイベントを削除してから追加（無限増殖防止）
+                el.removeEventListener('mouseenter', playHoverSound); 
+                el.addEventListener('mouseenter', playHoverSound);
             });
         };
 
@@ -1723,7 +1742,7 @@ User: ${msg}
                 const direction = i % 2 === 0 ? -50 : 50;
                 gsap.fromTo(item, 
                     { opacity: 0, x: direction, rotation: direction > 0 ? 5 : -5 },
-                    { opacity: 1, x: 0, rotation: 0, duration: 0.8, ease: "back.out(1.2)",
+                    { opacity: 1, x: 0, rotation: 0, duration: 0.8, ease: "back.out(1.2)", 
                       scrollTrigger: { trigger: item, start: "top 80%", toggleActions: "play none none reverse" }
                     }
                 );
