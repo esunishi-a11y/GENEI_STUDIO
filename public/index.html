@@ -916,7 +916,7 @@ requestAdminAccess: () => {
       { scale: 0.9, opacity: 0 },
       { scale: 1, opacity: 1, duration: 0.2, ease: "power2.out" }
     );
-    const input = document.getElementById('otp-input');
+    const input = document.getElementById('otp-input').value.trim();
     input.value = '';
     input.focus();
   };
