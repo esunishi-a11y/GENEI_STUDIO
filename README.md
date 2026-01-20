@@ -1,1 +1,0 @@
-# GENEI_STUDIO
