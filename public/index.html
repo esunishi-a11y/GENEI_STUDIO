@@ -947,7 +947,6 @@ requestAdminAccess: () => {
 
                 if (input === AuthService.otp) {
                     AuthService.token = "TOKEN_" + Date.now();
-                    AuthService.expiry = Date.now() + 60000; 
                     
                     if (db && window.firebaseModules) {
                         try {
@@ -965,22 +964,16 @@ requestAdminAccess: () => {
                     document.getElementById('auth-modal').style.display = 'none';
                     window.enableAdminMode();
                     window.showAlert("ACCESS GRANTED.\nTOKEN VALID FOR 60 SECONDS.");
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 60000);
 
                 } else {
                     window.showAlert("INVALID PASSCODE");
                 }
             },
 
-            isAuthenticated: () => {
-                if (!AuthService.token || Date.now() > AuthService.expiry) {
-                    return false;
-                }
-                return true;
+             isAuthenticated: () => {
+             return !!AuthService.token;
             }
+
         };
 
         window.AuthService = AuthService;
