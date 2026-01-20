@@ -900,6 +900,10 @@
             },
 
 requestAdminAccess: () => {
+
+    },
+verify: async () => {
+
   if (!AuthService.checkRateLimit()) {
     window.showAlert("SECURITY ALERT: Too many attempts. System locked for 60s.");
     return;
@@ -919,7 +923,13 @@ requestAdminAccess: () => {
     const input = document.getElementById('otp-input').value.trim();
     input.value = '';
     input.focus();
+
+    isAuthenticated: () => {
+        return !!AuthService.token && Date.now() <= AuthService.expiry;
+    }
   };
+
+  window.AuthService = AuthService;
 
   // EmailJSが使えるなら送信を試す（失敗してもモーダルは開く）
   if (window.emailjs && EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
